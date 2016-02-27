@@ -17,7 +17,6 @@ RUN mkdir -p /data/db
 
 EXPOSE 27017
 
-ADD js/initiate.js /initiate.js
 ADD js/setupReplicaSet1.js /setupReplicaSet1.js
 ADD js/setupReplicaSet2.js /setupReplicaSet2.js
 ADD js/setupReplicaSet3.js /setupReplicaSet3.js
