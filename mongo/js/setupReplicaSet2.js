@@ -1,4 +1,9 @@
-rs.add('mongos2r2.mongo.dev.docker:27017')
-cfg = rs.conf()
-cfg.members[0].host = 'mongos2r1.mongo.dev.docker:27017'
-rs.reconfig(cfg)
+var cfg = { _id: 'set2',
+    members: [
+        { _id: 0, host: 'mongo-r1s2:27017'},
+        { _id: 1, host: 'mongo-r2s2:27017'}
+    ]
+};
+
+var error = rs.initiate(cfg);
+printjson(error);

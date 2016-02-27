@@ -1,0 +1,186 @@
+version: '2'
+volumes:
+  r1s1: {}
+  r1s2: {}
+  r1s3: {}
+  r2s1: {}
+  r2s2: {}
+  r2s3: {}
+  config-1: {}
+  config-2: {}
+  config-3: {}
+  
+networks:
+  mongo-cluster:
+    driver: bridge
+    
+services:
+  
+  mongo-r1s1:
+    hostname: mongo-r1s1
+    container_name: mongo-r1s1
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    volumes:
+      - r1s1:/data/db
+    environment:
+      - OPTIONS=d --replSet set1 --dbpath /data/db --notablescan --noprealloc --smallfiles
+  
+  mongo-r1s2:
+    container_name: mongo-r1s2
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    volumes:
+      - r1s2:/data/db
+    environment:
+      - OPTIONS=d --replSet set2 --dbpath /data/db --notablescan --noprealloc --smallfiles
+  
+  mongo-r1s3:
+    container_name: mongo-r1s3
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    volumes:
+      - r1s3:/data/db
+    environment:
+      - OPTIONS=d --replSet set3 --dbpath /data/db --notablescan --noprealloc --smallfiles
+  
+  
+  mongo-r2s1:
+    container_name: mongo-r2s1
+    hostname: mongo-r2s1
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    volumes:
+      - r2s1:/data/db
+    environment:
+      - OPTIONS=d --replSet set1 --dbpath /data/db --notablescan --noprealloc --smallfiles
+  
+  mongo-r2s2:
+    container_name: mongo-r2s2
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    volumes:
+      - r2s2:/data/db
+    environment:
+      - OPTIONS=d --replSet set2 --dbpath /data/db --notablescan --noprealloc --smallfiles
+  
+  mongo-r2s3:
+    container_name: mongo-r2s3
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    volumes:
+      - r2s3:/data/db
+    environment:
+      - OPTIONS=d --replSet set3 --dbpath /data/db --notablescan --noprealloc --smallfiles
+
+
+  init-s1:
+    container_name: init-s1
+    stdin_open: true
+    tty: true
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    environment:
+      - WAITFOR=mongo-r1s1,mongo-r2s1
+      - MODE=init-set
+      - TARGET=mongo-r1s1
+      - SET=1
+  
+  init-s2:
+    container_name: init-s2
+    stdin_open: true
+    tty: true
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    environment:
+      - WAITFOR=mongo-r1s2,mongo-r2s2
+      - MODE=init-set
+      - TARGET=mongo-r1s2
+      - SET=2
+  
+  init-s3:
+    container_name: init-s3
+    stdin_open: true
+    tty: true
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    environment:
+      - WAITFOR=mongo-r1s3,mongo-r2s3
+      - MODE=init-set
+      - TARGET=mongo-r1s3
+      - SET=3
+
+  
+  
+  
+  
+  config-1:
+    container_name: config-1
+    stdin_open: true
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    volumes:
+      - config-1:/data/db
+    environment:
+      - WAITFOR=mongo-r1s1,mongo-r2s1
+      - OPTIONS=d --configsvr --dbpath /data/db --notablescan --noprealloc --smallfiles --port 27017
+  
+  config-2:
+    container_name: config-2
+    stdin_open: true
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    volumes:
+      - config-2:/data/db
+    environment:
+      - WAITFOR=mongo-r1s2,mongo-r2s2
+      - OPTIONS=d --configsvr --dbpath /data/db --notablescan --noprealloc --smallfiles --port 27017
+  
+  config-3:
+    container_name: config-3
+    stdin_open: true
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    volumes:
+      - config-3:/data/db
+    environment:
+      - WAITFOR=mongo-r1s3,mongo-r2s3
+      - OPTIONS=d --configsvr --dbpath /data/db --notablescan --noprealloc --smallfiles --port 27017
+  
+  
+  
+  router-1:
+    container_name: router-1
+    build: ./mongo
+    ports:
+      - 27017:27017
+    networks:
+      - mongo-cluster
+    environment:
+      - WAITFOR=config-1,config-2,config-3
+      - OPTIONS=s --configdb config-1:27017,config-2:27017,config-3:27017 --port 27017
+
+  router-1-setup:
+    container_name: router-1-setup
+    stdin_open: true
+    tty: true
+    build: ./mongo
+    networks:
+      - mongo-cluster
+    environment:
+      - SLEEP=30
+      - WAITFOR=router-1
+      - MODE=init-cluster
+      - TARGET=router-1
