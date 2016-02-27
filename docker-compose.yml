@@ -80,8 +80,8 @@ services:
       - OPTIONS=d --replSet set3 --dbpath /data/db --notablescan --noprealloc --smallfiles
 
 
-  init-s1:
-    container_name: init-s1
+  mongo-init-s1:
+    container_name: mongo-init-s1
     stdin_open: true
     tty: true
     build: ./mongo
@@ -93,8 +93,8 @@ services:
       - TARGET=mongo-r1s1
       - SET=1
   
-  init-s2:
-    container_name: init-s2
+  mongo-init-s2:
+    container_name: mongo-init-s2
     stdin_open: true
     tty: true
     build: ./mongo
@@ -106,8 +106,8 @@ services:
       - TARGET=mongo-r1s2
       - SET=2
   
-  init-s3:
-    container_name: init-s3
+  mongo-init-s3:
+    container_name: mongo-init-s3
     stdin_open: true
     tty: true
     build: ./mongo
@@ -123,8 +123,8 @@ services:
   
   
   
-  config-1:
-    container_name: config-1
+  mongo-config-1:
+    container_name: mongo-config-1
     stdin_open: true
     build: ./mongo
     networks:
@@ -135,8 +135,8 @@ services:
       - WAITFOR=mongo-r1s1,mongo-r2s1
       - OPTIONS=d --configsvr --dbpath /data/db --notablescan --noprealloc --smallfiles --port 27017
   
-  config-2:
-    container_name: config-2
+  mongo-config-2:
+    container_name: mongo-config-2
     stdin_open: true
     build: ./mongo
     networks:
@@ -147,8 +147,8 @@ services:
       - WAITFOR=mongo-r1s2,mongo-r2s2
       - OPTIONS=d --configsvr --dbpath /data/db --notablescan --noprealloc --smallfiles --port 27017
   
-  config-3:
-    container_name: config-3
+  mongo-config-3:
+    container_name: mongo-config-3
     stdin_open: true
     build: ./mongo
     networks:
@@ -161,19 +161,19 @@ services:
   
   
   
-  router-1:
-    container_name: router-1
+  mongo-router-1:
+    container_name: mongo-router-1
     build: ./mongo
     ports:
       - 27017:27017
     networks:
       - mongo-cluster
     environment:
-      - WAITFOR=config-1,config-2,config-3
-      - OPTIONS=s --configdb config-1:27017,config-2:27017,config-3:27017 --port 27017
+      - WAITFOR=mongo-config-1,mongo-config-2,mongo-config-3
+      - OPTIONS=s --configdb mongo-config-1:27017,mongo-config-2:27017,mongo-config-3:27017 --port 27017
 
-  router-1-setup:
-    container_name: router-1-setup
+  mongo-router-1-setup:
+    container_name: mongo-router-1-setup
     stdin_open: true
     tty: true
     build: ./mongo
@@ -181,6 +181,6 @@ services:
       - mongo-cluster
     environment:
       - SLEEP=30
-      - WAITFOR=router-1
+      - WAITFOR=mongo-router-1
       - MODE=init-cluster
-      - TARGET=router-1
+      - TARGET=mongo-router-1
