@@ -13,6 +13,8 @@ volumes:
 networks:
   mongo-cluster:
     driver: bridge
+  mongo:
+    driver: bridge
     
 services:
   
@@ -167,6 +169,7 @@ services:
     ports:
       - 27017:27017
     networks:
+      - mongo
       - mongo-cluster
     environment:
       - WAITFOR=mongo-config-1,mongo-config-2,mongo-config-3
